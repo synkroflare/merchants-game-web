@@ -21,7 +21,7 @@ const config = {
     defaultLocale: "en",
   },
   images: {
-    domains: ["todcutler.com"],
+    domains: ["todcutler.com", "i.imgur.com"],
   },
 };
 export default config;

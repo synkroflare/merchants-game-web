@@ -1,3 +1,11 @@
+export type TBlueprintInGame = {
+  gameId: number;
+  blueprintId: number;
+  expirationDay: number;
+  createdAt: Date;
+  blueprint: TBlueprint;
+};
+
 export type TBlueprint = {
   id: number;
   imageUrl: string;

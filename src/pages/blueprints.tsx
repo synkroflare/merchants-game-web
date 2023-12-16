@@ -1,17 +1,34 @@
 import { IconBox, IconCalendar, IconCoin, IconX } from "@tabler/icons-react";
+import { randomBytes } from "crypto";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { useContext } from "react";
-import { blueprints } from "~/constants/blueprints";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "~/context";
-import { type TBlueprint } from "~/types";
+import { socket } from "~/socket";
+import { type TBlueprintInGame } from "~/types";
 
 const Home: NextPage = () => {
   const { data } = useContext(AppContext);
-  const handleBlueprintDelete = (bp: TBlueprint) => {
-    alert("deleting: " + bp.name);
+
+  const handleDeleteBlueprint = (blueprintInGame: TBlueprintInGame) => {
+    socket.emit("deleteBlueprint", blueprintInGame.blueprint.id);
   };
+
+  const handleGenerateBlueprint = () => {
+    socket.emit("generateBlueprint");
+  };
+
+  const [blueprintsInGame, setBlueprintsInGame] = useState<TBlueprintInGame[]>(
+    []
+  );
+
+  useEffect(() => {
+    socket.on("blueprintsInGameUpdated", (payload: TBlueprintInGame[]) => {
+      setBlueprintsInGame(payload);
+    });
+  }, []);
+
   return (
     <>
       <Head>
@@ -37,78 +54,72 @@ const Home: NextPage = () => {
           </div>
 
           <div className="my-auto grid grid-cols-1 gap-4 overflow-auto p-2 pb-12">
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => {
-              const bp = blueprints[index];
-              if (bp) {
-                {
-                  return (
-                    <div
-                      className="game-blueprint relative flex flex-col items-center gap-2 rounded-md bg-gray-800 p-4 font-[sign45] text-white "
-                      key={index}
-                    >
-                      {data.permission === "admin" && (
-                        <div
-                          className="absolute right-0 top-0 rounded-tr-md bg-red-500 p-2 text-white"
-                          onClick={() => handleBlueprintDelete(bp)}
-                        >
-                          <IconX />
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2  ">
-                        <Image
-                          src={bp.imageUrl}
-                          width={250}
-                          height={250}
-                          alt={bp.name}
-                          className="rounded-md"
-                        />
-                        <div className="flex flex-col gap-4">
-                          <div className="w-full text-center text-xl">
-                            {bp.name}
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-row items-center justify-center gap-2">
-                              <IconCoin size={30} />
-                              <span>{bp.reward}</span>
-                            </div>
-                            <div className="flex flex-row items-center justify-center gap-2">
-                              <IconBox size={30} />
-                              <span>{bp.ingredientCount}</span>
-                            </div>
-                            <div className="flex flex-row items-center justify-center gap-2">
-                              <IconCalendar size={30} />
-                              <span>{bp.deliveryTime}</span>
-                            </div>
-                          </div>
-                        </div>
+            {blueprintsInGame.map((blueprintInGame) => (
+              <div
+                className="game-blueprint relative flex flex-col items-center gap-2 rounded-md bg-gray-800 p-4 font-[sign45] text-white "
+                key={blueprintInGame.blueprint.id}
+              >
+                {data.permission === "admin" && (
+                  <div
+                    className="absolute right-0 top-0 rounded-tr-md bg-red-500 p-2 text-white"
+                    onClick={() => handleDeleteBlueprint(blueprintInGame)}
+                  >
+                    <IconX />
+                  </div>
+                )}
+                <div className="grid grid-cols-2  ">
+                  <Image
+                    src={blueprintInGame.blueprint.imageUrl}
+                    width={250}
+                    height={250}
+                    alt={blueprintInGame.blueprint.name}
+                    className="rounded-md"
+                  />
+                  <div className="flex flex-col gap-4">
+                    <div className="w-full text-center text-xl">
+                      {blueprintInGame.blueprint.name}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-row items-center justify-center gap-2">
+                        <IconCoin size={30} />
+                        <span>{blueprintInGame.blueprint.reward}</span>
                       </div>
-                      <div className="flex w-full flex-col">
-                        <div className="text-xl">Descrição</div>
-                        <span className="text-sm">{bp.description}</span>
+                      <div className="flex flex-row items-center justify-center gap-2">
+                        <IconBox size={30} />
+                        <span>{blueprintInGame.blueprint.ingredientCount}</span>
                       </div>
-                      <div className="flex w-full flex-col">
-                        <div
-                          className="ml-auto rounded-md bg-indigo-600 px-5 py-1 text-white"
-                          onClick={() => alert(bp.tips)}
-                        >
-                          Ver Dicas
-                        </div>
+                      <div className="flex flex-row items-center justify-center gap-2">
+                        <IconCalendar size={30} />
+                        <span>{blueprintInGame.blueprint.deliveryTime}</span>
                       </div>
                     </div>
-                  );
-                }
-              }
-              if (data.permission === "admin") {
-                return (
-                  <div
-                    className="game-blueprint relative flex flex-col items-center gap-2 rounded-md bg-gray-800 p-4 font-[sign45] text-white "
-                    key={index}
-                  >
-                    add
                   </div>
-                );
-              }
-            })}
+                </div>
+                <div className="flex w-full flex-col">
+                  <div className="text-xl">Descrição</div>
+                  <span className="text-sm">
+                    {blueprintInGame.blueprint.description}
+                  </span>
+                </div>
+                <div className="flex w-full flex-col">
+                  <div
+                    className="ml-auto rounded-md bg-indigo-600 px-5 py-1 text-white"
+                    onClick={() => alert(blueprintInGame.blueprint.tips)}
+                  >
+                    Ver Dicas
+                  </div>
+                </div>
+              </div>
+            ))}
+            {data.permission === "admin" && blueprintsInGame.length < 9 && (
+              <button
+                className="game-blueprint relative flex flex-col items-center gap-2 rounded-md bg-gray-800 p-4 font-[sign45] text-white "
+                key={randomBytes(4).toString("hex")}
+                onClick={handleGenerateBlueprint}
+              >
+                add
+              </button>
+            )}
           </div>
         </div>
       </main>

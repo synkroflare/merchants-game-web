@@ -1,21 +1,8 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { socket } from "./_app";
 
 const Home: NextPage = () => {
-  const [day, setDay] = useState<number>(1);
-
-  useEffect(() => {
-    const updateDay = () => {
-      socket.on("updateDay", (payload: unknown) => {
-        console.log({ payload });
-        // setDay(payload.day as number);
-      });
-    };
-    updateDay();
-  }, []);
   return (
     <>
       <Head>

@@ -1,18 +1,17 @@
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconRestore } from "@tabler/icons-react";
 import { type AppType } from "next/dist/shared/lib/utils";
-import { useContext, useState } from "react";
-import { io } from "socket.io-client";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "~/context";
+import { socket } from "~/socket";
 
 import "~/styles/globals.css";
-
-export const socket = io("http://localhost:4000");
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const ctx = useContext(AppContext);
 
   const [showMasterLogin, setShowMasterLogin] = useState<boolean>(false);
   const [masterKey, setMasterKey] = useState<string>("");
+  const [day, setDay] = useState<number>(1);
 
   const handleMasterLogin = () => {
     if (masterKey === "y55") {
@@ -25,9 +24,22 @@ const MyApp: AppType = ({ Component, pageProps }) => {
     setShowMasterLogin(false);
   };
 
-  const handleDayPass = () => {
+  useEffect(() => {
+    socket.emit("connectPlayer");
+
+    socket.on("dayUpdated", (payload: number) => {
+      setDay(payload);
+    });
+  }, []);
+
+  const handleNextDay = () => {
     socket.emit("nextDay");
   };
+
+  const handleResetGame = () => {
+    socket.emit("resetGame");
+  };
+
   return (
     <AppContext.Provider value={ctx}>
       <div className="flex h-screen flex-col overflow-hidden" id="app_main">
@@ -62,14 +74,22 @@ const MyApp: AppType = ({ Component, pageProps }) => {
           </div>
         )}
         <div className="sticky top-0 flex w-full flex-row items-center bg-indigo-600 px-4 py-1">
-          <div className="font-[sign45] text-3xl text-white">DIA: 1</div>
+          <div className="font-[sign45] text-3xl text-white">DIA: {day}</div>
           {ctx.data.permission === "admin" && (
-            <div
-              className="mx-6 rounded-md bg-emerald-500 p-1 text-white"
-              onClick={() => handleDayPass()}
-            >
-              <IconPlus />
-            </div>
+            <>
+              <div
+                className="mx-6 cursor-pointer rounded-md bg-emerald-500 p-1 text-white"
+                onClick={handleNextDay}
+              >
+                <IconPlus />
+              </div>
+              <div
+                className="cursor-pointer rounded-md bg-red-500 p-1 text-white"
+                onClick={handleResetGame}
+              >
+                <IconRestore />
+              </div>
+            </>
           )}
           <div
             className="ml-auto rounded-md  bg-black/50 p-2 font-[sign45] text-white shadow-xl"
