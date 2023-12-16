@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: "sign45";
+  src: url("/fonts/Sign45.otf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "sign45";
+  src: url("/fonts/Sign45- Old Scratched.otf");
+  font-weight: bold;
+  font-style: normal;
+}
+
+.text-shadow-1 {
+  text-shadow: 3px 3px #2a2a2a;
+}
+
+.text-shadow-2 {
+  text-shadow: 5px 5px #2a2a2a;
+}
+
+.text-shadow-3 {
+  text-shadow: 7px 7px #2a2a2a;
+}
